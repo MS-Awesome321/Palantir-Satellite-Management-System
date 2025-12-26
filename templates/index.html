@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <script src="{{url_for('static', filename='cesium/Build/Cesium/Cesium.js')}}"></script>
+  <link href="{{url_for('static', filename='cesium/Build/Cesium/Widgets/widgets.css')}}" rel="stylesheet">
+
+  <style>
+    *, body {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    #cesiumContainer {
+        height: 100vh;;
+    }
+  </style>
+</head>
+<body>
+  <div id="cesiumContainer"></div>
+  <script type="module">
+    // Initialize the Cesium Viewer in the HTML element with the `cesiumContainer` ID.
+    Cesium.Ion.defaultAccessToken = ; //check token managment
+
+    const viewer = new Cesium.Viewer('cesiumContainer', {
+        shouldAnimate: true,
+    });    
+
+    viewer.dataSources.add(
+        Cesium.CzmlDataSource.load("{{url_for('static', filename='czml/orbits.czml')}}"),
+    );
+
+    // Set Default Skin
+    var currentPicker = viewer.baseLayerPicker.viewModel.imageryProviderViewModels;
+    var indexDefault = 0;
+    var numDeletes = 0
+    for (var i = 0 ; i < currentPicker.length; i++) {
+      if (currentPicker[i].name.includes("Sentinel")) {
+        indexDefault = i;
+      }
+      else if (currentPicker[i].name.includes("Bing") && currentPicker[i].name.includes("Aerial")) {
+        var temp = currentPicker[0];
+        currentPicker[0] = currentPicker[i];
+        currentPicker[i] = temp;
+        numDeletes++;
+      }
+    }
+    var defaultLayer = currentPicker[indexDefault];
+    viewer.baseLayerPicker.viewModel.selectedImagery = defaultLayer;
+
+    // Remove Bad Skins
+    for (var i = 0; i < numDeletes; i++){
+      currentPicker.shift();
+    }
+
+    viewer.camera.flyHome(0);
+  </script>
+ </div>
+</body>
+</html>
